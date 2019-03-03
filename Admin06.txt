@@ -1,0 +1,354 @@
+教学环境介绍
+
+  优先开启虚拟机classroom,优先一秒钟即可
+
+真机使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+ – 格式:rht-vmctl  控制指令   虚拟机名     
+ – 常用控制指令:
+]# rht-vmctl  reset  classroom  //先重置资源服务器
+]# rht-vmctl  reset  server     //再重置练习虚拟机
+]# rht-vmctl  reset  desktop    //再重置练习虚拟机
+
+######################################################
+基本权限
+
+• 访问方式(权限)
+– 读取:允许查看内容-read   r
+– 写入:允许修改内容-write   w
+– 可执行:允许运行和切换-execute  x
+
+  对于文本文件:
+        r:cat  less   head  tail 
+        w:vim能够保存   >     >>
+        x:针对与Shell脚本
+
+• 权限适用对象(归属)
+– 所有者:拥有此文件/目录的用户-user  u
+– 所属组:拥有此文件/目录的组-group     g
+– 其他用户:除所有者、所属组以外的用户-other  o
+
+
+查看权限
+• 使用 ls -l 命令
+  – ls -ld 文件或目录...
+  
+   以 d 开头为目录
+   以 l 开头为快捷方式
+   以 - 开头为文本文件
+
+   权限位 硬连接数 属主 属组 大小 最后修改时间 文件/目录名称
+
+[root@server0 ~]# ls -ld /etc/        
+[root@server0 ~]# ls -l /etc/passwd
+
+[root@server0 ~]# ls -ld /root
+[root@server0 ~]# ls -l  /etc/shadow
+
+[root@server0 ~]# ls -ld /home/student
+[root@server0 ~]# ls -ld /tmp
+
+设置基本权限
+• 使用 chmod 命令
+– chmod        归属关系+-=权限类别 文档...
+         [-R]  递归修改权限
+
+[root@server0 ~]# mkdir /nsd01
+[root@server0 ~]# ls -ld /nsd01
+
+[root@server0 ~]# chmod u-w /nsd01
+[root@server0 ~]# ls -ld /nsd01
+[root@server0 ~]# chmod g+w /nsd01
+[root@server0 ~]# ls -ld /nsd01
+[root@server0 ~]# chmod o=rwx /nsd01
+[root@server0 ~]# ls -ld /nsd01
+[root@server0 ~]# chmod o=--- /nsd01
+[root@server0 ~]# ls -ld /nsd01
+[root@server0 ~]# chmod u=rwx,g=rx,o=rx /nsd01
+[root@server0 ~]# ls -ld /nsd01
+[root@server0 ~]# chmod ugo=rwx /nsd01
+[root@server0 ~]# ls -ld /nsd01
+
+[root@server0 ~]# mkdir -p /opt/aa/bb/cc
+[root@server0 ~]# ls -ld /opt/aa
+[root@server0 ~]# ls -ld /opt/aa/bb/
+[root@server0 ~]# ls -ld /opt/aa/bb/cc/
+
+[root@server0 ~]# chmod -R o=--- /opt/aa
+[root@server0 ~]# ls -ld  /opt/aa
+[root@server0 ~]# ls -ld  /opt/aa/bb/
+[root@server0 ~]# ls -ld  /opt/aa/bb/cc/
+
+####################################################
+Linux中如何判定用户具备的权限:         匹配及停止
+   1.判断用户属于角色                     所有者>所属组>其他人   
+   2.查看相应角色权限位置的权限
+
+
+  1.王老师可以进入               1.所有人不可以进入
+  2.所有人不可以进入            2.王老师可以进入
+
+
+Permission denied:权限不足
+
+####################################################
+目录的 r 权限:能够 ls 浏览此目录内容
+目录的 w 权限:能够执行 rm/mv/cp/mkdir/touch/等更改目录内容的操作
+目录的 x 权限:能够 cd 切换到此目录
+
+以root用户新建/nsddir/目录，在此目录下新建readme.txt文件
+并进一步完成下列操作
+ 1）使用户lisi能够在此目录下创建子目录    切换用户  su  -  lisi
+     chmod o+w  /nsddir/
+ 2）使用户lisi不能够在此目录下创建子目录
+     chmod o-w  /nsddir/
+ 3）使用户lisi能够修改readme.txt文件内容
+     chmod o+w  /nsddir/readme.txt
+ 4）调整此目录的权限，使所有用户都不能cd进入此目录
+     chmod u-x,g-x,o-x  /nsddir/
+ 5）为此目录及其下所有文档设置权限 rwxr-x---
+     chmod -R  u=rwx,g=rx,o=---  /nsddir/
+
+############################################## 
+设置文档归属
+• 使用 chown 命令
+– chown [-R] 属主 文档...
+– chown [-R] :属组 文档...
+– chown [-R] 属主:属组 文档...
+
+[root@server0 ~]# mkdir /nsd03
+[root@server0 ~]# ls -ld /nsd03
+
+[root@server0 ~]# groupadd  tarena
+[root@server0 ~]# chown  lisi:tarena  /nsd03
+[root@server0 ~]# ls -ld /nsd03
+
+[root@server0 ~]# chown root /nsd03
+[root@server0 ~]# ls -ld /nsd03
+
+[root@server0 ~]# groupadd tedu
+[root@server0 ~]# chown :tedu /nsd03
+[root@server0 ~]# ls -ld /nsd03
+
+##################################################
+利用root用户新建/nsd06目录，并进一步完成下列操作
+1）将属主设为gelin01，属组设为tarena组              
+[root@server0 /]# useradd gelin01
+[root@server0 /]# useradd gelin02
+[root@server0 /]# groupadd tarena
+[root@server0 /]# chown gelin01:tarena  /nsd06
+2）使用户gelin01对此目录具有rwx权限
+      除属主与属组之外的人，对此目录无任何权限
+[root@server0 /]# chmod o=--- /nsd06
+3）使用户gelin02能进入、查看此目录
+[root@server0 /]# gpasswd -a  gelin02  tarena
+4）将gelin01加入tarena组, 将nsd06目录的权限设为rw-r-x---
+      再测试gelin01用户能否进入此目录
+[root@server0 /]# gpasswd -a  gelin01  tarena
+[root@server0 /]# chmod u=rw,g=rx /nsd06
+
+######################################################
+ 实现lisi用户,对/etc/shadow文件具备读权限,您有几种办法?
+
+     1.修改其他人权限  chmod o+r /etc/shadow
+     2.修改归属关系,将lisi修改所有者  
+       chown  lisi  /etc/shadow
+       chmod  u+r   /etc/shadow
+     3.修改归属关系,将lisi组修改所属组 
+       chown  :lisi  /etc/shadow
+       chmod  g+r    /etc/shadow
+     4.利用ACL策略  setfacl -m  u:lisi:r  /etc/shadow
+
+
+#####################################################
+附加权限(特殊权限)
+
+Set GID
+• 附加在属组的 x 位上
+– 属组的权限标识会变为 s
+– 适用于目录,Set GID可以使目录下新增的文档自动设
+置与父目录相同的属组  
+– 传递所属组身份
+
+[root@server0 /]# mkdir /nsd08
+[root@server0 /]# ls -ld /nsd08
+
+[root@server0 /]# chown :tarena /nsd08
+[root@server0 /]# ls -ld /nsd08
+[root@server0 /]# mkdir /nsd08/abc01
+[root@server0 /]# ls -ld /nsd08/abc01
+
+[root@server0 /]# chmod g+s /nsd08/     #设置Set Gid权限
+[root@server0 /]# ls -ld /nsd08/
+[root@server0 /]# ls -ld /nsd08/abc01/
+
+[root@server0 /]# mkdir /nsd08/abc02
+[root@server0 /]# ls -ld /nsd08/abc02
+
+[root@server0 /]# touch /nsd08/abc02/1.txt
+[root@server0 /]# ls -l /nsd08/abc02/1.txt
+
+
+案例1:配置附加权限
+创建一个共用目录 /home/admins,要求如下:
+– 此目录的组所有权是 adminuser
+– adminuser 组的成员对此目录有读写和执行的权限,
+除此以外的其他所有用户没有任何权限(root用户能
+够访问系统中的所有文件和目录)
+– 在此目录中创建的文件,其组的所有权会自动设置为
+属于 adminuser 组
+
+[root@server0 /]# mkdir /home/admins   
+[root@server0 /]# groupadd adminuser
+[root@server0 /]# ls -ld /home/admins/
+
+[root@server0 /]# chown :adminuser /home/admins/
+[root@server0 /]# ls -ld /home/admins/
+[root@server0 /]# chmod g+w /home/admins/     #题意要求
+[root@server0 /]# ls -ld /home/admins/
+[root@server0 /]# chmod o=--- /home/admins/   #题意要求
+[root@server0 /]# ls -ld /home/admins/
+
+[root@server0 /]# chmod g+s /home/admins/
+[root@server0 /]# ls -ld /home/admins/
+[root@server0 /]# touch /home/admins/1.txt
+[root@server0 /]# ls -l /home/admins/1.txt
+
+####################################################
+acl访问控制列表
+acl策略的作用
+• 文档归属的局限性
+– 任何人只属于三种角色:属主、属组、其他人
+– 无法实现更精细的控制
+
+• acl访问策略
+– 能够对个别用户、个别组设置独立的权限
+– 大多数挂载的EXT3/4、XFS文件系统默认已支持
+
+
+• 使用 getfacl、setfacl 命令
+– getfacl 文档...
+– setfacl  -m  u:用户名:权限类别    文档...
+– setfacl  -m  g:组名:权限类别    文档...
+– setfacl  -x  u:用户名        文档...        #删除指定的ACL策略
+– setfacl  -b  文档...                        #清除所有ACL策略
+
+   
+[root@server0 /]# mkdir /nsd11
+[root@server0 /]# chmod o=--- /nsd11
+[root@server0 /]# ls -ld /nsd11
+
+[root@server0 /]# su - lisi
+[lisi@server0 ~]$ cd /nsd11
+-bash: cd: /nsd11: Permission denied
+[lisi@server0 ~]$ exit
+
+[root@server0 /]# setfacl -m u:lisi:rx /nsd11  #设置ACL策略
+[root@server0 /]# getfacl /nsd11   #专用于查看ACL策略
+[root@server0 /]# su - lisi
+[lisi@server0 ~]$ cd /nsd11
+[lisi@server0 nsd11]$ pwd
+[lisi@server0 nsd11]$ exit
+[root@server0 /]# 
+
+
+[root@server0 /]# mkdir /nsd12         
+[root@server0 /]# setfacl -m u:dc:rwx   /nsd12
+[root@server0 /]# setfacl -m u:lisi:rx  /nsd12
+[root@server0 /]# setfacl -m u:zhangsan:rwx  /nsd12
+[root@server0 /]# setfacl -m u:tom:rx  /nsd12
+
+[root@server0 /]# setfacl -x u:tom  /nsd12  #删除指定ACL策略
+[root@server0 /]# getfacl /nsd12
+[root@server0 /]# setfacl -x u:dc  /nsd12
+[root@server0 /]# getfacl /nsd12
+
+[root@server0 /]# setfacl -b  /nsd12      #清除所有ACL策略
+[root@server0 /]# getfacl /nsd12
+                                                                  
+###################################################
+设置黑名单
+[root@server0 /]# mkdir /public
+[root@server0 /]# chmod ugo=rwx /public
+[root@server0 /]# ls -ld /public
+drwxrwxrwx. 2 root root 6 1月   5 16:08 /public
+[root@server0 /]# id tom
+uid=1004(tom) gid=1006(tom) 组=1006(tom)
+[root@server0 /]# setfacl -m u:tom:--- /public
+[root@server0 /]# getfacl  /public
+
+###################################################
+
+使用LDAP认证,实现网络用户认证,达到用户的集中管理
+  
+     网络用户:用户信息会放在网络中LDAP服务器
+     本地用户:用户信息会放在/etc/passwd
+
+LDAP服务器:虚拟机classroom
+
+客户端:虚拟机server
+1.安装sssd软件,与LDAP服务器沟通
+[root@server0 /]# yum -y install sssd
+[root@server0 /]# rpm -q sssd
+
+2.安装authconfig-gtk图形的工具,进行配置客户端sssd软件
+[root@server0 /]# yum -y install authconfig-gtk
+[root@server0 /]# authconfig-gtk
+
+完全合格的主机名  www.baidu.com    www.qq.com
+               classroom.example.com
+
+     选择LDAP
+      dc=example,dc=com             #指定服务端域名
+      classroom.example.com         #指定服务端主机名
+     勾选TLS加密
+      使用证书加密:
+     http://classroom.example.com/pub/example-ca.crt
+
+     选择LDAP密码 
+
+3.重起服务
+[root@server0 ~]# systemctl  restart  sssd   #重起服务
+[root@server0 ~]# systemctl  enable  sssd    #设置开机自启动
+[root@server0 ~]# grep ldapuser0 /etc/passwd
+[root@server0 ~]# id ldapuser0     #验证LDAP用户信息
+          
+###################################################      
+家目录漫游
+
+
+什么是NFS共享
+• Network File System,网络文件系统
+– 由NFS服务器将指定的文件夹共享给客户机
+– 客户机将此共享目录 mount 到本地目录,访问此共享
+资源就像访问本地目录一样方便
+– 类似于 EXT4、XFS等类型,只不过资源在网上
+
+ NFS服务器:虚拟机classroom
+
+客户端:虚拟机server
+
+1. 查看NFS资源
+– showmount -e [服务器地址]
+
+[root@server0 ~]# showmount -e classroom.example.com
+Export list for classroom.example.com:
+/home/guests  172.25.0.0/255.255.0.0
+[root@server0 ~]# 
+
+2. 挂载NFS共享目录
+– mount 服务器地址:目录路径 本地挂载点
+
+]# mkdir /home/guests
+
+]# mount  classroom.example.com:/home/guests/   /home/guests/
+
+]# ls  /home/guests/
+]# su  -  ldapuser0
+
+
+###################################################
+
+
+
+
