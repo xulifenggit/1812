@@ -1,0 +1,626 @@
+教学环境介绍
+
+  优先开启虚拟机classroom,优先一秒钟即可
+
+真机使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+ – 格式:rht-vmctl  控制指令   虚拟机名     
+ – 常用控制指令:
+]# rht-vmctl  reset  classroom  //先重置资源服务器
+]# rht-vmctl  reset  server     //再重置练习虚拟机
+]# rht-vmctl  reset  desktop    //再重置练习虚拟机
+
+#######################################################
+管理用户和组                                                 
+
+   用户账户: 登陆操作系统,不同用户具备不同权限
+   组:方便管理用户,进行分类
+
+  用户账户唯一标识:  UID(编号)   GID(编号)
+  管理员的UID永远为0
+
+   组帐号:  基本组    附加组(从属组)
+   基本组:由Linux系统创建,并且由系统将用户加入,与用户同名
+   附加组:由系统管理员创建,并且由系统管理员加入
+
+  Linux中一个用户至少属于一个组
+
+####################################################
+添加用户
+所有用户基本信息存放在 /etc/passwd 文件
+[root@server0 ~]# head  -1  /etc/passwd
+ root:x:0:0:root:/root:/bin/bash
+用户名:密码占位符:UID:基本组GID:用户描述信息:用户的家目录:解释器
+
+
+• 使用 useradd 命令
+– useradd [选项]... 用户名
+
+• 常用命令选项
+– -u 用户id、-d 家目录路径、-G 附加组、-s 指定解释器程序
+
+[root@server0 ~]# useradd nsd01
+[root@server0 ~]# id dc         #查看用户基本信息
+id: dc: no such user           #没有此用户
+[root@server0 ~]# id nsd01      #查看用户基本信息
+
+[root@server0 ~]# useradd nsd02
+[root@server0 ~]# id nsd02
+
+[root@server0 ~]# useradd nsd03
+[root@server0 ~]# id nsd03
+
+[root@server0 ~]# useradd -u 1500  nsd04  #创建用户指定UID
+[root@server0 ~]# id nsd04
+
+
+-d 家目录路径、-G 附加组
+
+[root@server0 ~]# useradd -d /mnt/nsd06  nsd06
+[root@server0 ~]# ls /mnt/
+nsd06
+[root@server0 ~]# grep nsd06 /etc/passwd
+nsd06:x:1502:1502::/mnt/nsd06:/bin/bash
+
+[root@server0 ~]# groupadd tarena         #创建tarena组
+[root@server0 ~]# useradd -G tarena nsd07
+[root@server0 ~]# id nsd07
+
+[root@server0 ~]# useradd -G tarena nsd08
+[root@server0 ~]# id nsd08
+
+-s 指定解释器程序
+
+ /sbin/nologin:禁止用户登陆系统
+
+[root@server0 ~]# useradd -s /sbin/nologin nsd09
+[root@server0 ~]# grep nsd09 /etc/passwd
+nsd09:x:1504:1505::/home/nsd09:/sbin/nologin
+[root@server0 ~]# useradd -s /sbin/nologin nsd10
+[root@server0 ~]# grep nsd10 /etc/passwd
+nsd10:x:1505:1506::/home/nsd10:/sbin/nologin
+
+##################################################
+
+设置登录密码
+• 使用 passwd 命令
+– passwd [用户名]
+
+[root@server0 ~]# passwd nsd01
+更改用户 nsd01 的密码 。
+新的 密码：                              #输入 密码
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：                  #重新输入密码
+passwd：所有的身份验证令牌已经成功更新。
+[root@server0 ~]# su - nsd01     #命令行临时切换到nsd01用户
+[nsd01@server0 ~]$ passwd 
+Changing password for user nsd01.
+Changing password for nsd01.
+(current) UNIX password:           #输入旧密码
+New password:                      #输入新密码
+Retype new password:               #重新输入新密码
+passwd: all authentication tokens updated successfully.
+[nsd01@server0 ~]$ exit         #退回到root用户
+successfully(成功)
+#######################################################
+重定向输出:将命令的输出,写入到文本文件中         
+   >:覆盖重定向
+   >>:追加重定向
+[root@server0 ~]# ls --help  > /opt/ls.txt
+[root@server0 ~]# less /opt/ls.txt
+
+[root@server0 ~]# hostname
+[root@server0 ~]# hostname > /opt/ls.txt 
+[root@server0 ~]# cat /opt/ls.txt
+
+[root@server0 ~]# hostname >> /opt/ls.txt
+[root@server0 ~]# cat /opt/ls.txt
+
+[root@server0 ~]# tail -2 /etc/passwd >> /opt/ls.txt
+[root@server0 ~]# cat /opt/ls.txt
+
+[root@server0 ~]# echo 123456  
+[root@server0 ~]# echo 123456 >> /opt/ls.txt
+[root@server0 ~]# cat /opt/ls.txt
+[root@server0 ~]# echo nsd.qq.com > /etc/hostname
+[root@server0 ~]# cat /etc/hostname
+[root@server0 ~]# exit
+
+[root@room9pc01 ~]# gos
+
+]# hostname
+]# echo nameserver 172.25.254.254
+]# echo nameserver 172.25.254.254 > /etc/resolv.conf 
+]# cat /etc/resolv.conf
+]# echo 123 > /opt/1.txt
+]# cat /opt/1.txt
+
+ 管道  |  :  将前面命令的输出,传递到后面命令,作为后面命令的参数
+
+  显示/etc/passwd文件 8~12行内容?
+[root@nsd ~]# head -12 /etc/passwd 
+[root@nsd ~]# head -12 /etc/passwd  |  tail -5 
+
+[root@nsd ~]# head -12 /etc/passwd  | tail -5 | cat -n
+
+[root@nsd ~]# cat -n /etc/passwd | head -12 | tail -5
+
+[root@nsd ~]# ifconfig | less
+[root@nsd ~]# ifconfig | head -2
+
+]# cat -n /etc/passwd | head -12 | tail -5
+]# cat -n /etc/passwd | head -12 | tail -5  > /opt/a.txt
+
+
+
+非交互式设置密码:
+– echo '密码'   |   passwd --stdin 用户名
+
+[root@nsd ~]# echo 123 | passwd --stdin nsd01
+更改用户 nsd01 的密码 。
+passwd：所有的身份验证令牌已经成功更新。
+[root@nsd ~]# echo redhat | passwd --stdin nsd02
+更改用户 nsd02 的密码 。
+passwd：所有的身份验证令牌已经成功更新。
+
+
+用户密码信息存放在 /etc/shadow 文件
+
+[root@nsd ~]# tail -1 /etc/shadow
+nsd10:!!:17900:0:99999:7:::
+
+当第二个字段为!!时,代表锁定该用户
+
+[root@nsd ~]# echo 1 | passwd --stdin nsd10
+更改用户 nsd10 的密码 。
+passwd：所有的身份验证令牌已经成功更新。
+[root@nsd ~]# tail -1 /etc/shadow
+nsd10:$6$bOG/zYu7$dQID7YKMq3dSWzMg386xPECbLxRq9M/.uPry1S4IkwTU98NUK/.x0RVbUGUAOSMhHz0Nmmci2TSjxROXRNVs/1:17900:0:99999:7:::
+
+用户名:密码加密字符串:上一次修改密码时间
+
+                                1970-1-1~2019-1-1
+
+
+
+查看系统时间:
+   date
+
+修改时间:  date  -s  '年-月-日   时:分:秒'
+[root@nsd ~]# date
+
+[root@nsd ~]# date -s '2008-10-1  12:10:8'
+
+[root@nsd ~]# date
+2008年 10月 01日 星期三 12:10:09 CST
+[root@nsd ~]# 
+
+ 计算器bc
+          加 +      减 -       乘 *        除 /
+
+[root@nsd ~]# bc  
+
+1+1
+2
+
+
+##################################################
+
+修改用户属性
+• 使用 usermod 命令
+– usermod [选项]... 用户名
+
+• 常用命令选项
+– -u 用户id、-d 家目录路径、-s 登录Shell、-G 附加组
+
+[root@server0 ~]# useradd nsd12
+[root@server0 ~]# id nsd12
+[root@server0 ~]# grep nsd12 /etc/passwd
+
+]# usermod -u 1600 -d /mnt/nsd12  -G tarena  -s /sbin/nologin  nsd12
+
+[root@server0 ~]# id nsd12
+[root@server0 ~]# grep nsd12 /etc/passwd
+
+#####################################################
+删除用户
+• 使用 userdel  命令
+– userdel [-r] 用户名
+
+  -r:连同家目录一并删除
+
+Permission denied:权限不足
+
+[root@server0 ~]# userdel  nsd02
+[root@server0 ~]# id  nsd02
+[root@server0 ~]# userdel  nsd03
+[root@server0 ~]# id  nsd03
+
+####################################################
+管理组账号
+
+添加组
+ 组基本信息存放在 /etc/group 文件
+[root@server0 ~]# grep stugrp /etc/group
+ stugrp:x:1509:
+  组名:密码占位符:组的GID:组成员列表
+
+• 使用 groupadd 命令
+– groupadd [-g 组ID] 组名
+[root@server0 ~]# groupadd stugrp         #创建组stugrp
+[root@server0 ~]# grep stugrp /etc/group
+stugrp:x:1509:
+[root@server0 ~]# useradd harry
+[root@server0 ~]# useradd natasha
+[root@server0 ~]# useradd jack
+[root@server0 ~]# useradd kenji
+ 
+	
+管理组成员
+  组的密码信息存放在 /etc/gshadow 文件
+
+• 使用 gpasswd 命令
+– gpasswd -a 用户名 组名
+– gpasswd -d 用户名 组名
+
+[root@server0 ~]# gpasswd -a harry stugrp
+[root@server0 ~]# grep stugrp /etc/group
+
+[root@server0 ~]# gpasswd -a kenji stugrp 
+[root@server0 ~]# grep stugrp /etc/group
+
+[root@server0 ~]# gpasswd -a natasha stugrp 
+[root@server0 ~]# grep stugrp /etc/group
+
+[root@server0 ~]# gpasswd -d harry stugrp
+[root@server0 ~]# grep stugrp /etc/group
+
+[root@server0 ~]# gpasswd -a jack stugrp 
+[root@server0 ~]# grep stugrp /etc/group
+
+修改组属性
+• 使用 groupmod 命令
+– groupmod [-g 组ID] [-n 新组名]  组名
+
+
+删除组
+• 使用 groupdel 命令                  
+– groupdel 组名
+
+   不能删除用户的基本组
+
+###################################################
+tar备份与恢复
+   1.减少占用的硬盘空间   2.将零散的数据进行整合
+
+• 归档的含义
+– 将许多零散的文件整理为一个文件
+– 文件总的大小基本不变
+
+• 压缩的含义
+– 按某种算法减小文件所占用空间的大小
+– 恢复时按对应的逆向算法解压
+
+常见的压缩格式及命令工具:
+  .gz ---> gzip
+  .bz2 ---> bzip2
+  .xz ---> xz
+
+tar进行归档及压缩(打包)
+格式:
+  tar  选项      /路径/压缩包的名字      /路径/源文档1  /路径/源文档2
+
+
+tar进行释放(解包)
+格式:
+  tar  选项   /路径/压缩包的名字    选项     释放的路径
+
+
+
+• tar 集成备份工具
+– -c:创建归档
+– -x:释放归档
+– -f:指定归档文件名称(所有的选项的最后)
+– -z、-j、-J:调用 .gz、.bz2、.xz 格式的工具进行处理
+– -t:显示归档中的文件清单
+– -C:指定释放的路径
+
+
+]# tar -zcf /opt/file.tar.gz  /home/   /boot/
+]# ls /opt/
+
+]# tar -jcf /opt/abc.tar.bz2  /etc/passwd  /etc/shadow
+]# ls /opt/
+
+]# tar -Jcf /opt/nsd.tar.xz   /etc/group  /etc/gshadow
+]# ls /opt/
+
+
+]# date -s '2019-1-4 15:50'          
+
+]# tar -xf /opt/file.tar.gz -C /mnt/
+]# ls /mnt/
+]# ls /mnt/home/
+]# ls /mnt/boot/
+
+]# tar -xf /opt/nsd.tar.xz -C /mnt/
+]# ls /mnt/
+]# ls /mnt/etc/
+
+]# tar -xf /opt/abc.tar.bz2 -C /mnt/
+]# ls /mnt/etc/
+
+
+使用 tar 工具完成以下备份任务:
+– 创建一个名为 /root/backup.tar.bz2 的归档文件
+– 其中包含 /usr/local 目录中的内容
+– tar 归档必须使用 bzip2 进行压缩
+
+[root@server0 ~]# tar -jcf /root/backup.tar.bz2 /usr/local/
+[root@server0 ~]# ls /root/
+
+[root@server0 ~]# tar -tf /root/backup.tar.bz2  #查看包里内容
+
+
+###################################################
+NTP时间同步
+
+NTP网络时间协议
+• Network Time Protocol
+ – NTP服务器为客户机提供标准时间
+ – NTP客户机需要与NTP服务器保持沟通
+
+NTP服务器:虚拟机classroom构建完成
+
+NTP客户机:指定NTP服务器位置
+虚拟机server:
+1.安装chrony软件,可以和NTP服务器沟通
+[root@server0 ~]# rpm -q chrony
+chrony-1.29.1-1.el7.x86_64
+
+2.修改主配置文件
+[root@server0 ~]# vim  /etc/chrony.conf 
+  大多数配置文件中,以#开头的行为注释信息
+ #server 0.rhel.pool.ntp.org iburst
+ #server 1.rhel.pool.ntp.org iburst
+ #server 2.rhel.pool.ntp.org iburst
+ server classroom.example.com  iburst    #指定服务端位置
+
+3.重起服务(重起程序)
+]# systemctl  restart  chronyd  
+]# systemctl  enable  chronyd     #设置服务开机自起
+ 
+  daemon:守护神;（希腊神话中）半人半神的精灵;[计]守护进程
+
+4.验证:                                                       
+[root@server0 ~]# date
+[root@server0 ~]# date -s '2000-10-1'     
+
+[root@server0 ~]# date
+[root@server0 ~]# systemctl restart chronyd
+[root@server0 ~]# date
+[root@server0 ~]# date
+[root@server0 ~]# date  
+
+##################################################
+cron计划任务(周期性任务)
+
+• 用途:按照设置的时间间隔为用户反复执行某一项固定的系统任务
+
+• 软件包:cronie、crontabs
+• 系统服务:crond
+• 日志文件:/var/log/crond
+
+执行周期 配置说明
+分钟 从0到59之间的整数
+小时 从0到23之间的整数
+日期 从1到31之间的整数
+月份 从1到12之间的整数
+星期 0~7之间的整数,0或7代表星期日
+
+  *:匹配范围内任意时间
+  ,:分隔多个不连续的时间点
+  -:指定连续时间范围
+ /n:指定时间频率,每n ...
+
+
+如何编写crontab任务记录
+  分  时  日  月  周      任务命令行(绝对路径)
+
+ 30 23  *  *  *     poweroff            
+
+  30  */2  *   *   *  
+
+  34  8   *   *   1-5  
+
+  34  8   1   *   1      每月1号与每周一都会运行   
+
+
+
+• 使用 crontab 命令
+– 编辑:crontab -e  [-u 用户名]
+– 查看:crontab -l  [-u 用户名]
+– 清除:crontab -r  [-u 用户名]
+
+  每分钟记录当前系统的时间,写入/opt/time.txt
+[root@server0 ~]# date
+2019年 01月 04日 星期五 17:29:25 CST
+[root@server0 ~]# date >> /opt/time.txt
+[root@server0 ~]# cat /opt/time.txt
+
+[root@server0 ~]# crontab -e -u root   #编写root用户计划任务
+* * * * *  date >> /opt/time.txt
+[root@server0 ~]# crontab -l -u root   #查看root用户计划任务
+
+[root@server0 ~]# ls /var/spool/cron/    
+[root@server0 ~]# cat /var/spool/cron/root  #生成的任务文件 
+* * * * *  date >> /opt/time.txt
+
+[root@server0 ~]# cat /opt/time.txt 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
